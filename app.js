@@ -1,9 +1,13 @@
 const express = require('express');
 const app = express();
 const morgan = require('morgan');
-const mongoose = require('mongoose');
-
+const Product = require('./models/product');
+const cors = require('cors');
 require('dotenv/config');
+
+// enabling cors
+app.use(cors());
+app.options("*", cors());
 
 const api = process.env.API_URL;
 
@@ -20,47 +24,16 @@ mongoose.connect(process.env.CONNECTION_STRING)
 	console.log(err);
 });
 
-// product model
-const productSchema = mongoose.Schema({
-	name: String,
-	image: String,
-	countInStock: {
-		type: Number,
-		required: true
-	} ,
-});
-
-const Product = mongoose.model('product', productSchema);
-
 // initial route
-app.get(`${api}/products`, async (req, res) => {
-	const productList = await Product.find();
+const categoriesRoutes = require('./routes/categories');
+const productsRoutes = require('./routes/products');
+const usersRoutes = require('./routes/users');
+const ordersRoutes = require('./routes/orders');
 
-	if(!productList) {
-		res.status(500).json({success: false})
-	}
-
-	res.send(productList);
-});
-
-app.post(`${api}/products`, (req, res) => {
-	// mengambil req body dari front-end
-	const product = new Product({
-		name: req.body.name,
-		image: req.body.image,
-		countInStock: req.body.countInStock
-	});
-
-	// kembalikan promise resolve dan reject ke front end sebagai respon
-	product.save().then((createdProduct) => {
-		res.status(201).json(createdProduct)
-	}).catch((err) => {
-		res.status(500).json({
-			error: err,
-			success: false
-		})
-	})
-});
+app.use(`${api}/categories`, categoriesRoutes);
+app.use(`${api}/products`, productsRoutes);
+app.use(`${api}/users`, usersRoutes);
+app.use(`${api}/orders`, ordersRoutes);
 
 // initial server : start awal respon server running
 app.listen(3000, () => {
