@@ -4,7 +4,11 @@ const express = require('express');
 const router = express.Router();
 
 router.get(`/`, async (req, res) => {
-    const productList = await Product.find();
+     // show product with complete information
+    // const productList = await Product.find();
+
+    // show product just showing name, image. but id is removed.
+    const productList = await Product.find().select('name image -_id');
 
     if (!productList) {
         res.status(500).json({ success: false })
@@ -12,6 +16,16 @@ router.get(`/`, async (req, res) => {
 
     res.send(productList);
 });
+
+router.get('/:id', async(req, res) => {
+    const product = await Product.findById(req.params.id);
+
+    if(!product) {
+        res.status(500).json({success: false});
+    }
+
+    res.send(product);
+})
 
 router.post(`/`, async (req, res) =>{
     const category = await Category.findById(req.body.category);
