@@ -57,4 +57,13 @@ const productSchema = mongoose.Schema({
     }
 });
 
+// create virtual id without underscore (_id is currently id in this project)
+productSchema.virtual('id').get(function() {
+    return this._id.toHexString();
+});
+
+productSchema.set('toJSON', {
+    virtuals: true,
+})
+
 exports.Product = mongoose.model('Product', productSchema);
