@@ -11,9 +11,14 @@ router.get(`/`, async (req, res) => {
     // show product just showing name, image. but id is removed.
     // const productList = await Product.find().select('name image -_id');
 
-    // populate product to category reference
-    const productList = await Product.find().populate('category');
+    // query parameters for filtering product
+    let filter = {};
+    if(req.query.categories){
+        filter = { category: req.query.categories.split(',') }
+    }
 
+    // populate product to category reference
+    const productList = await Product.find(filter).populate('category');
     if (!productList) {
         res.status(500).json({ success: false })
     }
