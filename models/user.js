@@ -51,5 +51,5 @@ userSchema.set('toJSON', {
 	virtuals: true,
 });
 
-exports.Category = mongoose.model('User', userSchema);
+exports.User = mongoose.model('User', userSchema);
 exports.userSchema = userSchema;
