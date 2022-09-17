@@ -28,9 +28,11 @@ mongoose.connect(process.env.CONNECTION_STRING)
 // initial route
 const categoriesRoutes = require('./routes/categories');
 const productsRoutes = require('./routes/products');
+const usersRoutes = require('./routes/users');
 
 app.use(`${api}/categories`, categoriesRoutes);
 app.use(`${api}/products`, productsRoutes);
+app.use(`${api}/users`, usersRoutes);
 
 // initial server : start awal respon server running
 app.listen(3000, () => {
