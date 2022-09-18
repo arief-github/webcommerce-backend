@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const morgan = require('morgan');
 const mongoose = require('mongoose');
-const Product = require('./models/product');
+const authJwt = require('./helpers/jwt');
 const cors = require('cors');
 require('dotenv/config');
 
@@ -15,6 +15,7 @@ const api = process.env.API_URL;
 // Middleware will handle request and response
 app.use(express.json());
 app.use(morgan('tiny'));
+app.use(authJwt());
 
 // connect to mongoDB
 mongoose.connect(process.env.CONNECTION_STRING)
