@@ -2,9 +2,12 @@ const express = require('express');
 const app = express();
 const morgan = require('morgan');
 const mongoose = require('mongoose');
-const authJwt = require('./helpers/jwt');
 const cors = require('cors');
 require('dotenv/config');
+
+// helper
+const authJwt = require('./helpers/jwt');
+const errorHandler = require('./helpers/error-handler');
 
 // enabling cors
 app.use(cors());
@@ -16,6 +19,7 @@ const api = process.env.API_URL;
 app.use(express.json());
 app.use(morgan('tiny'));
 app.use(authJwt());
+app.use(errorHandler);
 
 // connect to mongoDB
 mongoose.connect(process.env.CONNECTION_STRING)
