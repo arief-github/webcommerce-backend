@@ -31,8 +31,20 @@ router.get('/:id', async (req, res) => {
     res.send(order);
 });
 
-router.post('/', async (req,res)=>{
-    const orderItemsIds = Promise.all(req.body.orderItems.map(async (orderItem) =>{
+router.get('/get/totalsales', async (req, res) => {
+    const totalSales = await Order.aggregate([
+        { $group: { _id: null, totalSales: { $sum: '$totalPrice' } } }
+    ]);
+
+    if (!totalSales) {
+        return res.status(400).send(' The Order sales cannot be generated ')
+    }
+
+    res.send({ totalSales: totalSales.pop().totalSales })
+})
+
+router.post('/', async (req, res) => {
+    const orderItemsIds = Promise.all(req.body.orderItems.map(async (orderItem) => {
         let newOrderItem = new OrderItem({
             quantity: orderItem.quantity,
             product: orderItem.product
@@ -42,16 +54,16 @@ router.post('/', async (req,res)=>{
 
         return newOrderItem._id;
     }))
-    const orderItemsIdsResolved =  await orderItemsIds;
+    const orderItemsIdsResolved = await orderItemsIds;
 
-    const totalPrices = await Promise.all(orderItemsIdsResolved.map(async (orderItemId)=>{
+    const totalPrices = await Promise.all(orderItemsIdsResolved.map(async (orderItemId) => {
         const orderItem = await OrderItem.findById(orderItemId).populate('product', 'price');
         const totalPrice = orderItem.product.price * orderItem.quantity;
         return totalPrice
         console.log(orderItem.product.price);
     }))
 
-    const totalPrice = totalPrices.reduce((a,b) => a +b , 0);
+    const totalPrice = totalPrices.reduce((a, b) => a + b, 0);
 
     let order = new Order({
         orderItems: orderItemsIdsResolved,
@@ -67,8 +79,8 @@ router.post('/', async (req,res)=>{
     })
     order = await order.save();
 
-    if(!order)
-    return res.status(400).send('the order cannot be created!')
+    if (!order)
+        return res.status(400).send('the order cannot be created!')
 
     res.send(order);
 })
