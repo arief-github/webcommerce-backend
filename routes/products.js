@@ -2,7 +2,22 @@ const { Product } = require('../models/product');
 const { Category } = require('../models/category');
 const express = require('express');
 const mongoose = require('mongoose');
+const multer  = require('multer');
 const router = express.Router();
+
+// setup multer for uploading file
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, 'public/uploads')
+    },
+    filename: function(req, file, cb) {
+        const fileName = file.originalname.replace(' ', '-');
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        cb(null, fileName + '-' + uniqueSuffix)
+    }
+})
+
+const uploadOptions = multer({ storage: storage });
 
 router.get(`/`, async (req, res) => {
     // show product with complete information
@@ -13,7 +28,7 @@ router.get(`/`, async (req, res) => {
 
     // query parameters for filtering product
     let filter = {};
-    if(req.query.categories){
+    if (req.query.categories) {
         filter = { category: req.query.categories.split(',') }
     }
 
@@ -36,15 +51,18 @@ router.get('/:id', async (req, res) => {
     res.send(product);
 });
 
-router.post(`/`, async (req, res) => {
+router.post(`/`, uploadOptions.single('image'), async (req, res) => {
     const category = await Category.findById(req.body.category);
     if (!category) return res.status(400).send('Invalid Category')
+
+    const fileName = req.file.filename;
+    const basePath = `${req.protocol}://${req.get('host')}/public/uploads/`;
 
     let product = new Product({
         name: req.body.name,
         description: req.body.description,
         richDescription: req.body.richDescription,
-        image: req.body.image,
+        image: `${basePath}${fileName}`,
         brand: req.body.brand,
         price: req.body.price,
         category: req.body.category,
@@ -64,8 +82,8 @@ router.post(`/`, async (req, res) => {
 
 router.put('/:id', async (req, res) => {
     // validation id 
-    if(!mongoose.isValidObjectId(req.params.id)) {
-       return res.status(400).send('Invalid Product Id')
+    if (!mongoose.isValidObjectId(req.params.id)) {
+        return res.status(400).send('Invalid Product Id')
     }
 
     const category = await Category.findById(req.body.category);
@@ -105,22 +123,22 @@ router.delete(`/:id`, async (req, res) => {
     })
 });
 
-router.get(`/get/count`, async (req, res) =>{
+router.get(`/get/count`, async (req, res) => {
     const productCount = await Product.countDocuments();
 
-    if(!productCount) {
-        res.status(500).json({success: false})
-    } 
+    if (!productCount) {
+        res.status(500).json({ success: false })
+    }
     res.send({
         productCount: productCount
     });
 });
 
-router.get(`/get/featured/:count`, async(req, res) => {
+router.get(`/get/featured/:count`, async (req, res) => {
     const count = req.params.count ? req.params.count : 0;
     const products = await Product.find({ isFeatured: true }).limit(+count);
 
-    if(!products) {
+    if (!products) {
         res.status(500).json({ success: false });
     }
 
