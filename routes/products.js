@@ -66,9 +66,14 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post(`/`, uploadOptions.single('image'), async (req, res) => {
+    // check validate if front-end send invalid category
     const category = await Category.findById(req.body.category);
     if (!category) return res.status(400).send('Invalid Category')
 
+    // check validate if front end not send image file
+    const file = req.file;
+    if (!file) return res.status(400).send('No Images are uploaded')
+    
     const fileName = req.file.filename;
     const basePath = `${req.protocol}://${req.get('host')}/public/uploads/`;
 
