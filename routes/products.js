@@ -2,7 +2,7 @@ const { Product } = require('../models/product');
 const { Category } = require('../models/category');
 const express = require('express');
 const mongoose = require('mongoose');
-const multer  = require('multer');
+const multer = require('multer');
 const router = express.Router();
 
 const FILE_TYPE_MAP = {
@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
         const isValid = FILE_TYPE_MAP[file.mimetype];
         let uploadError = new Error('Invalid image type');
 
-        if(isValid) {
+        if (isValid) {
             uploadError = null;
         }
 
@@ -73,7 +73,7 @@ router.post(`/`, uploadOptions.single('image'), async (req, res) => {
     // check validate if front end not send image file
     const file = req.file;
     if (!file) return res.status(400).send('No Images are uploaded')
-    
+
     const fileName = req.file.filename;
     const basePath = `${req.protocol}://${req.get('host')}/public/uploads/`;
 
@@ -114,7 +114,7 @@ router.put('/:id', uploadOptions.single('image'), async (req, res) => {
     const file = req.file;
     let imagepath;
 
-    if(file) {
+    if (file) {
         const fileName = file.filename;
         const basePath = `${req.protocol}://${req.get('host')}/public/uploads/`;
         imagepath = `${basePath}${fileName}`;
@@ -176,6 +176,34 @@ router.get(`/get/featured/:count`, async (req, res) => {
     }
 
     res.send(products);
+})
+
+router.put('/galery-images/:id', uploadOptions.array('images', 10), async (req, res) => {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+        return res.status(400).send('Invalid Product Id');
+    }
+
+    const files = req.files;
+    let imagePaths = [];
+    const basePath = `${req.protocol}://${req.get('host')}/public/uploads/`;
+
+    if(files) {
+        files.map((file) => {
+            imagePaths.push(` ${basePath}${file.filename} `);
+        })
+    }
+
+    const product = await Product.findByIdAndUpdate(
+        req.params.id, 
+        {
+            images: imagePaths
+        },
+        { new: true }
+    );
+
+    if(!product) return res.status(500).send('the gallery cannot be updated!');
+
+    res.send(product);
 })
 
 module.exports = router;
